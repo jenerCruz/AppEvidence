@@ -9,8 +9,7 @@
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#312e81">
 
-  <!-- Tailwind CSS -->
-    <link rel="stylesheet" href="./assets/css/tailwind.min.css">
+  <link rel="stylesheet" href="./assets/css/tailwind.min.css">
   <!-- Chart.js -->
   <script src="./assets/js/chart.umd.min.js"></script>
   <!-- Lucide Icons -->
@@ -78,7 +77,7 @@
     <!-- VISTA 2: PANEL INDIVIDUAL -->
     <div id="view-individual" class="hidden fade-in space-y-6">
         <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-slate-200 relative">
-            <button onclick="showTab('team')" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1 bg-slate-100 rounded-full z-10">
+            <button onclick="showTab('team')" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1 bg-slate-100 rounded-full z-10" aria-label="Cerrar panel usuario">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
             <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-4 text-white flex items-center gap-4">
@@ -109,7 +108,8 @@
 
         <div id="ind-view-evidencia" class="space-y-4 pt-2">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Fecha de Registro</label>
+                <!-- Corrección: Se agrega 'for' -->
+                <label for="evidence-date" class="block text-xs font-bold text-slate-500 mb-2 uppercase">Fecha de Registro</label>
                 <input type="date" id="evidence-date" class="w-full rounded-lg border-slate-300 shadow-sm text-sm">
             </div>
             <div class="grid grid-cols-2 gap-3">
@@ -120,7 +120,8 @@
                     </div>
                     <div class="file-input-wrapper w-full">
                         <button class="bg-blue-100 text-blue-700 w-full py-1.5 rounded-lg text-xs font-bold">Subir</button>
-                        <input type="file" accept="image/*" onchange="handleFileSelect(event, 'entrada')">
+                        <!-- Corrección: Se agrega aria-label -->
+                        <input type="file" aria-label="Subir evidencia de entrada" accept="image/*" onchange="handleFileSelect(event, 'entrada')">
                     </div>
                 </div>
                 <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-center">
@@ -130,7 +131,8 @@
                     </div>
                     <div class="file-input-wrapper w-full">
                         <button class="bg-indigo-100 text-indigo-700 w-full py-1.5 rounded-lg text-xs font-bold">Subir</button>
-                        <input type="file" accept="image/*" onchange="handleFileSelect(event, 'salida')">
+                        <!-- Corrección: Se agrega aria-label -->
+                        <input type="file" aria-label="Subir evidencia de salida" accept="image/*" onchange="handleFileSelect(event, 'salida')">
                     </div>
                 </div>
             </div>
@@ -157,8 +159,9 @@
             <i data-lucide="cloud" class="w-8 h-8 mx-auto text-indigo-600"></i>
             <h2 class="text-xl font-bold text-slate-800">Sincronización Gist</h2>
             <div class="text-left space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                <div><label class="text-xs font-bold text-slate-600">Gist ID</label><input id="gist-id" type="text" class="w-full rounded-lg border-slate-300 text-sm mt-1"></div>
-                <div><label class="text-xs font-bold text-slate-600">Github Token</label><input id="gist-token" type="password" class="w-full rounded-lg border-slate-300 text-sm mt-1"></div>
+                <!-- Corrección: Se agregan 'for' -->
+                <div><label for="gist-id" class="text-xs font-bold text-slate-600">Gist ID</label><input id="gist-id" type="text" class="w-full rounded-lg border-slate-300 text-sm mt-1"></div>
+                <div><label for="gist-token" class="text-xs font-bold text-slate-600">Github Token</label><input id="gist-token" type="password" class="w-full rounded-lg border-slate-300 text-sm mt-1"></div>
                 <button onclick="saveGistConfig()" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold">Guardar</button>
             </div>
             <div class="grid grid-cols-2 gap-4">
@@ -175,13 +178,15 @@
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-95 opacity-0" id="user-modal-content">
           <div class="bg-slate-800 px-4 py-3 flex justify-between items-center">
               <h3 class="text-white font-bold" id="modal-title">Promotor</h3>
-              <button onclick="closeUserModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+              <button onclick="closeUserModal()" class="text-slate-400 hover:text-white" aria-label="Cerrar modal"><i data-lucide="x" class="w-5 h-5"></i></button>
           </div>
           <div class="p-5 space-y-4">
               <input type="hidden" id="edit-user-id">
-              <div><label class="block text-xs font-bold text-slate-500 mb-1">Nombre</label><input type="text" id="input-name" class="w-full rounded-lg border-slate-300"></div>
-              <div><label class="block text-xs font-bold text-slate-500 mb-1">Sucursal</label><input type="text" id="input-branch" class="w-full rounded-lg border-slate-300"></div>
-              <div class="flex items-center gap-2 pt-2"><input type="checkbox" id="input-active" class="rounded text-indigo-600" checked><label class="text-sm text-slate-700">Activo</label></div>
+              <!-- Corrección: Se agregan 'for' -->
+              <div><label for="input-name" class="block text-xs font-bold text-slate-500 mb-1">Nombre</label><input type="text" id="input-name" class="w-full rounded-lg border-slate-300"></div>
+              <div><label for="input-branch" class="block text-xs font-bold text-slate-500 mb-1">Sucursal</label><input type="text" id="input-branch" class="w-full rounded-lg border-slate-300"></div>
+              <!-- Corrección: Se agrega 'for' al checkbox -->
+              <div class="flex items-center gap-2 pt-2"><input type="checkbox" id="input-active" class="rounded text-indigo-600" checked><label for="input-active" class="text-sm text-slate-700">Activo</label></div>
               <button onclick="saveUser()" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-bold">Guardar</button>
               <button id="btn-delete-user" onclick="deleteUser()" class="w-full text-red-500 py-2 text-xs font-bold hidden">Eliminar</button>
           </div>
@@ -193,5 +198,4 @@
   <script src="./assets/js/app.js"></script>
 </body>
 </html>
-
 
