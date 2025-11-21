@@ -479,26 +479,64 @@ function fileToBase64(file) {
 let currentEvidence = {
     entrada: null,
     salida: null
+// NUEVOS CAMPOS:Almacenan los datos
+ validador del OCR
+  validatedCheckIn:null,
+  validatedCheckOut:null
 };
 
 async function handleFileSelect(event, type) {
     const file = event.target.files[0];
     if (!file) return;
+    
+    // 🔑 Obtener la fecha seleccionada por el usuario (debe estar en YYYY-MM-DD)
+    const selectedDate = document.getElementById('evidence-date').value; 
+    if (!selectedDate) {
+        return showToast('Error: Primero selecciona una fecha de evidencia.', true);
+    }
 
     try {
+        // --- PASO 1: Ejecutar OCR y obtener el texto bruto ---
+        const rawText = await processImageForOCR(file);
+        
+        if (!rawText) {
+             return; // El error ya fue notificado
+        }
+
+        // --- PASO 2: Validar el texto con la fecha seleccionada ---
+        const validationResult = validateCheckOutData(rawText, selectedDate);
+
+        if (!validationResult.isValid) {
+            // ❌ Detener aquí si la validación falla
+            // También mostramos el mensaje de error específico
+            return showToast(validationResult.message, true); 
+        }
+        
+        // --- PASO 3: Si la validación es exitosa, guardar datos y base64 ---
+        
+        // 3a. Guardar la imagen comprimida
         const base64Data = await fileToBase64(file);
         currentEvidence[type] = base64Data;
 
-        // Mostrar vista previa
+        // 3b. Guardar los datos validados en el slot correspondiente
+        if (type === 'entrada') {
+            currentEvidence.validatedCheckIn = validationResult;
+        } else if (type === 'salida') {
+            currentEvidence.validatedCheckOut = validationResult;
+        }
+
+        // Mostrar vista previa y éxito
         const previewEl = document.getElementById(`preview-${type}`);
         previewEl.innerHTML = `<img src="${base64Data}" class="w-full h-full object-cover">`;
 
-        showToast(`Imagen de ${type} cargada y comprimida.`);
+        showToast(`${validationResult.message} Imagen de ${type} cargada.`);
+
     } catch (e) {
         showToast('Error procesando la imagen.', true);
         console.error(e);
     }
 }
+
 
 async function loadCurrentEvidence(userId, date) {
     const evidenceId = `${userId}_${date}`;
