@@ -9,11 +9,14 @@
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#312e81">
 
-  <link rel="stylesheet" href="./assets/css/tailwind.min.css">
-  <!-- Chart.js -->
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Chart.js LOCAL -->
   <script src="./assets/js/chart.umd.min.js"></script>
+  
   <!-- Lucide Icons -->
-    <script defer src="./assets/js/lucide.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; }
@@ -167,6 +170,16 @@
             <div class="grid grid-cols-2 gap-4">
                 <button onclick="syncFromGist()" class="p-4 border border-slate-200 rounded-xl hover:bg-slate-50"><span class="text-xs font-bold">Descargar</span></button>
                 <button onclick="syncToGist()" class="p-4 border border-slate-200 rounded-xl hover:bg-slate-50"><span class="text-xs font-bold">Subir</span></button>
+            </div>
+            
+            <!-- NUEVO BOTÓN DE LIMPIEZA -->
+            <hr class="border-slate-200">
+            <div class="text-left p-2 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-xs font-bold text-red-700 mb-1 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Mantenimiento de la base de datos</p>
+                <p class="text-xs text-red-600 mb-3">Esta acción borrará todas las asistencias con más de 30 días de antigüedad y subirá el archivo limpio a Gist. Los nombres de los promotores NO se borran.</p>
+                <button onclick="cleanOldEvidence()" class="w-full bg-red-600 text-white py-2.5 rounded-lg font-bold flex justify-center items-center gap-2 hover:bg-red-700 transition">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Limpiar Historial Antiguo
+                </button>
             </div>
         </div>
     </div>
