@@ -527,4 +527,43 @@ window.syncToGist = async function() {
                 'Authorization': `token ${cfg.token}`,
                 'Content-Type': 'application/json'
             },
-       
+       body: JSON.stringify(payload)
+        });
+        if(res.ok) window.showToast('Sincronización Exitosa');
+        else window.showToast('Error en Gist API', 'error');
+    } catch(e) {
+        console.error(e);
+        window.showToast('Error de conexión', 'error');
+    }
+};
+
+window.syncFromGist = async function() {
+    const cfg = await dbGet(STORES.CONFIG, 'gist_credentials');
+    if(!cfg || !cfg.id || !cfg.token) return window.showToast('Configura Gist primero', 'error');
+
+    window.showToast('Descargando...');
+    try {
+        const res = await fetch(`https://api.github.com/gists/${cfg.id}`, {
+            headers: { 'Authorization': `token ${cfg.token}` }
+        });
+        const data = await res.json();
+        const content = data.files['gestion_asistencias_full.json']?.content;
+        
+        if(content) {
+            const parsed = JSON.parse(content);
+            if(parsed.users) {
+                for(const u of parsed.users) await dbPut(STORES.USERS, u);
+            }
+            if(parsed.evidences) {
+                for(const e of parsed.evidences) await dbPut(STORES.EVIDENCES, e);
+            }
+            window.showToast('Base de datos actualizada');
+            loadTeamGrid();
+        } else {
+            window.showToast('Archivo no encontrado en Gist', 'error');
+        }
+    } catch(e) {
+         console.error(e);
+        window.showToast('Error al descargar', 'error');
+    }
+};
