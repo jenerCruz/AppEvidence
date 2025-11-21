@@ -559,7 +559,6 @@ async function loadCurrentEvidence(userId, date) {
         }
     }
 }
-
 async function saveEvidence() {
     const date = document.getElementById('evidence-date').value;
     
@@ -572,6 +571,46 @@ async function saveEvidence() {
     if (!currentEvidence.entrada && !currentEvidence.salida) {
         return showToast('Debes subir al menos una foto (entrada o salida).', true);
     }
+    
+    // 🚨 Nueva Validación: Asegurar que si hay foto, haya datos validados
+    if ((currentEvidence.entrada && !currentEvidence.validatedCheckIn) || 
+        (currentEvidence.salida && !currentEvidence.validatedCheckOut)) {
+        return showToast('Error: Falta información validada para una o ambas fotos. Vuelve a cargar la imagen.', true);
+    }
+    
+    const evidenceId = `${activeUserId}_${date}`;
+    
+    const evidence = {
+        id: evidenceId,
+        userId: activeUserId,
+        fecha: date,
+        entrada: currentEvidence.entrada,
+        salida: currentEvidence.salida,
+        // -----------------------------------------------------------------
+        // NUEVOS CAMPOS CLAVE: Guardamos el resultado del OCR y la validación
+        validatedEntry: currentEvidence.validatedCheckIn,
+        validatedExit: currentEvidence.validatedCheckOut,
+        // -----------------------------------------------------------------
+        timestamp: Date.now()
+    };
+
+    try {
+        await save(STORES.EVIDENCES, evidence);
+        showToast('Asistencia guardada correctamente.');
+        // Recalcular stats y actualizar el historial
+        calculateUserStats(activeUserId);
+        if (!document.getElementById('ind-view-historial').classList.contains('hidden')) {
+             renderUserChart(activeUserId);
+             renderUserHistory(activeUserId);
+        }
+    } catch (e) {
+        showToast('Error al guardar la evidencia.', true);
+        console.error(e);
+    }
+}
+
+// ...
+ 
     
     const evidenceId = `${activeUserId}_${date}`;
     
