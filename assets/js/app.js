@@ -478,7 +478,7 @@ function fileToBase64(file) {
 
 let currentEvidence = {
     entrada: null,
-    salida: null
+    salida: null,
 // NUEVOS CAMPOS:Almacenan los datos
  validador del OCR
   validatedCheckIn:null,
