@@ -11,6 +11,102 @@ const STORES = {
     EVIDENCES: 'evidences',
     CONFIG: 'config' // Gist ID, Token
 };
+// --- REQUIERE TESSERACT.JS CDN EN EL HTML ---
+
+/**
+ * Convierte una fecha de formato DD/MM/YY (OCR) a YYYY-MM-DD para comparación.
+ */
+function parseOCRDate(ocrDateString) {
+    // Implementación de parseOCRDate... (código anterior)
+    const parts = ocrDateString.split('/'); 
+    if (parts.length !== 3) return null;
+
+    const year = parseInt(parts[2], 10);
+    const fullYear = (year > new Date().getFullYear() - 2000 + 10) ? 1900 + year : 2000 + year;
+
+    const month = parts[1].padStart(2, '0');
+    const day = parts[0].padStart(2, '0');
+    
+    return `${fullYear}-${month}-${day}`;
+}
+
+
+/**
+ * Realiza todas las validaciones (patrones y reglas de negocio).
+ */
+function validateCheckOutData(text, userSelectedDate) {
+    // Regex Maestra para capturar Fecha, Hora, Región, Cód. Numérico y Cód. Alfanumérico.
+    const regex = /(\d{1,2}\/\d{1,2}\/\d{2}).*?(\d{1,2}:\d{2}\s*[ap]\.?\s*m\.?).*?(Región\s?\d+).*?(\d{5}).*?(\w+)/is;
+    const match = text.match(regex);
+    
+    const failedResult = { isValid: false, message: 'Fallo: No se encontraron todos los patrones requeridos.', code: null };
+    
+    if (!match) {
+        return failedResult;
+    }
+
+    const ocrDateStr = match[1];
+    const ocrAlphaCode = match[5];
+    
+    // VALIDACIÓN 1: FECHA
+    const ocrStandardDate = parseOCRDate(ocrDateStr);
+    
+    if (ocrStandardDate !== userSelectedDate) {
+        failedResult.message = `❌ La fecha de la imagen (${ocrDateStr}) no coincide con la fecha seleccionada (${userSelectedDate}).`;
+        return failedResult;
+    }
+
+    // VALIDACIÓN 2: CÓDIGO ALFANUMÉRICO NO DEBE CONTENER 'PMC'
+    if (ocrAlphaCode.toUpperCase().includes('PMC')) {
+        failedResult.message = `❌ El código final (${ocrAlphaCode}) contiene la secuencia prohibida 'PMC'.`;
+        return failedResult;
+    }
+
+    // ÉXITO
+    return {
+        isValid: true,
+        message: '✅ Validación exitosa.',
+        date: ocrDateStr,
+        time: match[2],
+        region: match[3],
+        numericCode: match[4],
+        alphaCode: ocrAlphaCode,
+        // Código único para referencia, si se necesita
+        code: `${match[4]}-${ocrAlphaCode}` 
+    };
+}
+
+
+/**
+ * Ejecuta el proceso de OCR usando Tesseract.js.
+ */
+async function processImageForOCR(imageFile) {
+    // Muestra un toast de progreso para el usuario
+    showToast('Iniciando OCR... no cierres esta vista.');
+    
+    const worker = await Tesseract.createWorker({
+        logger: m => {
+             // Si el logger está activado, puedes mostrar el progreso más detallado en la consola o en un elemento
+        }
+    });
+
+    try {
+        await worker.loadLanguage('spa');
+        await worker.initialize('spa');
+        
+        const { data: { text } } = await worker.recognize(imageFile);
+        
+        return text.trim();
+
+    } catch (error) {
+        console.error('Error durante el OCR:', error);
+        showToast('Error crítico en el OCR. Intente de nuevo.', true);
+        return null; 
+    } finally {
+        await worker.terminate();
+    }
+}
+
 
 /* ============================================================
    UTILIDADES
