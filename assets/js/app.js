@@ -1,3 +1,4 @@
+ 
 /* ============================================================
    GLOBAL CONFIGURACION IDB
    ============================================================ */
@@ -11,16 +12,21 @@ const STORES = {
     EVIDENCES: 'evidences',
     CONFIG: 'config' // Gist ID, Token
 };
-// --- REQUIERE TESSERACT.JS CDN EN EL HTML ---
+
+/* ============================================================
+   FUNCIONES DE OCR Y VALIDACIÓN
+   ============================================================ */
 
 /**
  * Convierte una fecha de formato DD/MM/YY (OCR) a YYYY-MM-DD para comparación.
+ * @param {string} ocrDateString - La fecha extraída por el OCR (ej: '21/11/25').
+ * @returns {string|null} - La fecha en formato estándar YYYY-MM-DD.
  */
 function parseOCRDate(ocrDateString) {
-    // Implementación de parseOCRDate... (código anterior)
     const parts = ocrDateString.split('/'); 
     if (parts.length !== 3) return null;
 
+    // Convertimos año de 2 dígitos (YY) a 4 dígitos (YYYY). Asumimos 20XX.
     const year = parseInt(parts[2], 10);
     const fullYear = (year > new Date().getFullYear() - 2000 + 10) ? 1900 + year : 2000 + year;
 
@@ -30,12 +36,14 @@ function parseOCRDate(ocrDateString) {
     return `${fullYear}-${month}-${day}`;
 }
 
-
 /**
- * Realiza todas las validaciones (patrones y reglas de negocio).
+ * Realiza todas las validaciones (patrones y reglas de negocio) sobre el texto.
+ * @param {string} text - El texto completo extraído por el OCR.
+ * @param {string} userSelectedDate - La fecha seleccionada por el usuario (YYYY-MM-DD).
+ * @returns {object} - Resultado estructurado con mensaje y datos.
  */
 function validateCheckOutData(text, userSelectedDate) {
-    // Regex Maestra para capturar Fecha, Hora, Región, Cód. Numérico y Cód. Alfanumérico.
+    // Regex Maestra: Captura Fecha, Hora, Región, Cód. Numérico (5 dígitos), Cód. Alfanumérico.
     const regex = /(\d{1,2}\/\d{1,2}\/\d{2}).*?(\d{1,2}:\d{2}\s*[ap]\.?\s*m\.?).*?(Región\s?\d+).*?(\d{5}).*?(\w+)/is;
     const match = text.match(regex);
     
@@ -71,22 +79,22 @@ function validateCheckOutData(text, userSelectedDate) {
         region: match[3],
         numericCode: match[4],
         alphaCode: ocrAlphaCode,
-        // Código único para referencia, si se necesita
         code: `${match[4]}-${ocrAlphaCode}` 
     };
 }
 
 
 /**
- * Ejecuta el proceso de OCR usando Tesseract.js.
+ * Ejecuta el proceso de OCR usando Tesseract.js. Usa Web Workers.
+ * @param {File} imageFile - El archivo de imagen.
+ * @returns {Promise<string|null>} - El texto extraído o null si hay error.
  */
 async function processImageForOCR(imageFile) {
-    // Muestra un toast de progreso para el usuario
-    showToast('Iniciando OCR... no cierres esta vista.');
+    showToast('Iniciando OCR... proceso local y asíncrono.');
     
     const worker = await Tesseract.createWorker({
         logger: m => {
-             // Si el logger está activado, puedes mostrar el progreso más detallado en la consola o en un elemento
+             // Opcional: mostrar progreso detallado
         }
     });
 
@@ -100,7 +108,7 @@ async function processImageForOCR(imageFile) {
 
     } catch (error) {
         console.error('Error durante el OCR:', error);
-        showToast('Error crítico en el OCR. Intente de nuevo.', true);
+        showToast('Error crítico en el OCR. Intente con una imagen más clara.', true);
         return null; 
     } finally {
         await worker.terminate();
@@ -108,6 +116,9 @@ async function processImageForOCR(imageFile) {
 }
 
 
+/* ============================================================
+   UTILIDADES
+  
 /* ============================================================
    UTILIDADES
    ============================================================ */
