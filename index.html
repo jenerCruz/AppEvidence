@@ -5,22 +5,23 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Gestión de Asistencias</title>
 
-  <!-- Tailwind CSS -->
-    <link rel="stylesheet" href="./assets/css/tailwind.min.css">
-  
-  <script src="./assets/js/chart.umd.min.js"></script>
-   <script defer src="./assets/js/lucide.min.js"></script>
-  
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#312e81">
 
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; }
     .tab-btn { transition: all 0.2s; }
     .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; background-color: #eff6ff; }
-    /* File Input Style */
     .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; }
     .file-input-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
-    /* Animaciones suaves */
     .fade-in { animation: fadeIn 0.3s ease-in-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   </style>
@@ -46,22 +47,20 @@
   <!-- Main Content -->
   <main class="flex-grow container mx-auto p-4 max-w-3xl space-y-4 relative">
 
-    <!-- TABS DE NAVEGACIÓN PRINCIPAL -->
+    <!-- NAVEGACIÓN -->
     <nav class="flex space-x-1 bg-white p-1 rounded-xl shadow-sm border border-slate-200 mb-4">
       <button onclick="showTab('team')" id="nav-team" class="tab-btn active flex-1 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 text-center">
         <i data-lucide="layout-grid" class="w-4 h-4 inline mb-0.5 mx-auto"></i><br>Equipo
       </button>
-      <!-- Este tab está oculto hasta que seleccionas un usuario -->
       <button onclick="showTab('individual')" id="nav-individual" class="tab-btn hidden flex-1 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 text-center relative">
         <i data-lucide="user-check" class="w-4 h-4 inline mb-0.5 mx-auto"></i><br>Panel Usuario
-        <span id="active-user-badge" class="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full hidden"></span>
       </button>
       <button onclick="showTab('settings')" id="nav-settings" class="tab-btn flex-1 py-2.5 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 text-center">
         <i data-lucide="settings" class="w-4 h-4 inline mb-0.5 mx-auto"></i><br>Config/Sync
       </button>
     </nav>
 
-    <!-- VISTA 1: EQUIPO (GRID DE TARJETAS) -->
+    <!-- VISTA 1: EQUIPO -->
     <div id="view-team" class="fade-in">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-lg font-bold text-slate-700">Promotores Registrados</h2>
@@ -69,36 +68,28 @@
                 <i data-lucide="user-plus" class="w-4 h-4"></i> Añadir
             </button>
         </div>
-
-        <!-- Grid Container -->
         <div id="team-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Las tarjetas se generan con JS -->
             <div class="p-8 text-center text-slate-400 col-span-full bg-white rounded-xl border border-dashed border-slate-300">
                 Cargando equipo...
-            </div>i
+            </div>
         </div>
     </div>
 
-    <!-- VISTA 2: PANEL INDIVIDUAL (Oculto por defecto) -->
+    <!-- VISTA 2: PANEL INDIVIDUAL -->
     <div id="view-individual" class="hidden fade-in space-y-6">
-        <!-- Header del Usuario Seleccionado -->
         <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-slate-200 relative">
             <button onclick="showTab('team')" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1 bg-slate-100 rounded-full z-10">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
             <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-4 text-white flex items-center gap-4">
-                <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold border-2 border-white uppercase" id="ind-initials">
-                  UN
-                </div>
+                <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold border-2 border-white uppercase" id="ind-initials">UN</div>
                 <div>
-                  <h2 class="text-lg font-bold" id="ind-name">Selecciona Usuario</h2>
+                  <h2 class="text-lg font-bold" id="ind-name">Usuario</h2>
                   <p class="text-xs text-blue-100 flex items-center gap-1">
                     <i data-lucide="store" class="w-3 h-3"></i> <span id="ind-branch">...</span>
                   </p>
                 </div>
             </div>
-            
-            <!-- Mini Stats -->
             <div class="p-3 grid grid-cols-2 gap-4 divide-x divide-slate-100">
                 <div class="text-center">
                   <p class="text-[10px] text-slate-500 uppercase tracking-wide">Semana</p>
@@ -111,663 +102,95 @@
             </div>
         </div>
 
-        <!-- Sub-Pestañas del Panel Individual -->
         <div class="flex border-b border-slate-200">
             <button onclick="switchIndTab('evidencia')" id="subtab-evidencia" class="flex-1 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50">Registro Diario</button>
-            <button onclick="switchIndTab('historial')" id="subtab-historial" class="flex-1 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">Historial & Gráficos</button>
+            <button onclick="switchIndTab('historial')" id="subtab-historial" class="flex-1 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">Historial</button>
         </div>
 
-        <!-- Sub-Vista: Carga de Evidencia -->
         <div id="ind-view-evidencia" class="space-y-4 pt-2">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                 <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Fecha de Registro</label>
-                <input type="date" id="evidence-date" class="w-full rounded-lg border-slate-300 shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500">
+                <input type="date" id="evidence-date" class="w-full rounded-lg border-slate-300 shadow-sm text-sm">
             </div>
-
             <div class="grid grid-cols-2 gap-3">
-                <!-- Entrada -->
                 <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-center">
                     <p class="text-xs font-bold text-slate-600 mb-2">ENTRADA</p>
                     <div id="preview-entrada" class="w-full h-24 bg-slate-100 rounded-lg mb-2 flex items-center justify-center overflow-hidden border border-slate-100">
                         <span class="text-slate-400 text-[10px]">Vacío</span>
                     </div>
                     <div class="file-input-wrapper w-full">
-                        <button class="bg-blue-100 text-blue-700 w-full py-1.5 rounded-lg text-xs font-bold hover:bg-blue-200 transition">
-                            <i data-lucide="camera" class="w-3 h-3 inline mr-1"></i> Subir
-                        </button>
+                        <button class="bg-blue-100 text-blue-700 w-full py-1.5 rounded-lg text-xs font-bold">Subir</button>
                         <input type="file" accept="image/*" onchange="handleFileSelect(event, 'entrada')">
                     </div>
                 </div>
-                <!-- Salida -->
                 <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-center">
                     <p class="text-xs font-bold text-slate-600 mb-2">SALIDA</p>
                     <div id="preview-salida" class="w-full h-24 bg-slate-100 rounded-lg mb-2 flex items-center justify-center overflow-hidden border border-slate-100">
                         <span class="text-slate-400 text-[10px]">Vacío</span>
                     </div>
                     <div class="file-input-wrapper w-full">
-                        <button class="bg-indigo-100 text-indigo-700 w-full py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-200 transition">
-                            <i data-lucide="camera" class="w-3 h-3 inline mr-1"></i> Subir
-                        </button>
+                        <button class="bg-indigo-100 text-indigo-700 w-full py-1.5 rounded-lg text-xs font-bold">Subir</button>
                         <input type="file" accept="image/*" onchange="handleFileSelect(event, 'salida')">
                     </div>
                 </div>
             </div>
-
-            <button onclick="saveEvidence()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transition flex justify-center items-center gap-2">
+            <button onclick="saveEvidence()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg flex justify-center items-center gap-2">
                 <i data-lucide="save" class="w-5 h-5"></i> Guardar Asistencia
             </button>
         </div>
 
-        <!-- Sub-Vista: Historial y Gráficos -->
         <div id="ind-view-historial" class="hidden space-y-4 pt-2">
              <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                 <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Avance Semanal</h4>
-                 <div class="h-40 relative">
-                    <canvas id="userChart"></canvas>
-                 </div>
+                 <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Gráfico Semanal</h4>
+                 <div class="h-40 relative"><canvas id="userChart"></canvas></div>
              </div>
              <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                  <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500">ÚLTIMOS REGISTROS</div>
-                 <div id="user-history-list" class="divide-y divide-slate-100 max-h-60 overflow-y-auto">
-                     <!-- JS injected -->
-                 </div>
+                 <div id="user-history-list" class="divide-y divide-slate-100 max-h-60 overflow-y-auto"></div>
              </div>
         </div>
     </div>
 
-    <!-- VISTA 3: CONFIGURACIÓN & SYNC -->
+    <!-- VISTA 3: CONFIGURACIÓN -->
     <div id="view-settings" class="hidden fade-in">
         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center space-y-4">
-            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto text-indigo-600">
-                <i data-lucide="cloud" class="w-8 h-8"></i>
-            </div>
+            <i data-lucide="cloud" class="w-8 h-8 mx-auto text-indigo-600"></i>
             <h2 class="text-xl font-bold text-slate-800">Sincronización Gist</h2>
-            <p class="text-sm text-slate-500">Guarda toda la base de datos (Usuarios + Evidencias) en tu repositorio Gist privado.</p>
-            
             <div class="text-left space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                <div>
-                    <label class="text-xs font-bold text-slate-600">Gist ID</label>
-                    <input id="gist-id" type="text" class="w-full rounded-lg border-slate-300 text-sm mt-1 focus:ring-indigo-500" placeholder="Pegar ID aquí">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-600">Github Token (PAT)</label>
-                    <input id="gist-token" type="password" class="w-full rounded-lg border-slate-300 text-sm mt-1 focus:ring-indigo-500" placeholder="ghp_...">
-                </div>
-                <button onclick="saveGistConfig()" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold hover:bg-slate-900">
-                    Guardar Credenciales
-                </button>
+                <div><label class="text-xs font-bold text-slate-600">Gist ID</label><input id="gist-id" type="text" class="w-full rounded-lg border-slate-300 text-sm mt-1"></div>
+                <div><label class="text-xs font-bold text-slate-600">Github Token</label><input id="gist-token" type="password" class="w-full rounded-lg border-slate-300 text-sm mt-1"></div>
+                <button onclick="saveGistConfig()" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold">Guardar</button>
             </div>
-
             <div class="grid grid-cols-2 gap-4">
-                <button onclick="syncFromGist()" class="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition group">
-                    <i data-lucide="download-cloud" class="w-6 h-6 text-blue-500 mb-2 group-hover:scale-110 transition"></i>
-                    <span class="text-xs font-bold text-slate-600">Descargar</span>
-                </button>
-                <button onclick="syncToGist()" class="flex flex-col items-center justify-center p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition group">
-                    <i data-lucide="upload-cloud" class="w-6 h-6 text-green-500 mb-2 group-hover:scale-110 transition"></i>
-                    <span class="text-xs font-bold text-slate-600">Subir Nube</span>
-                </button>
+                <button onclick="syncFromGist()" class="p-4 border border-slate-200 rounded-xl hover:bg-slate-50"><span class="text-xs font-bold">Descargar</span></button>
+                <button onclick="syncToGist()" class="p-4 border border-slate-200 rounded-xl hover:bg-slate-50"><span class="text-xs font-bold">Subir</span></button>
             </div>
         </div>
     </div>
 
   </main>
 
-  <!-- MODAL: CREAR/EDITAR USUARIO -->
+  <!-- MODAL Y TOAST -->
   <div id="user-modal" class="fixed inset-0 bg-black/50 z-[60] hidden items-center justify-center p-4 backdrop-blur-sm">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-95 opacity-0" id="user-modal-content">
           <div class="bg-slate-800 px-4 py-3 flex justify-between items-center">
-              <h3 class="text-white font-bold" id="modal-title">Nuevo Promotor</h3>
+              <h3 class="text-white font-bold" id="modal-title">Promotor</h3>
               <button onclick="closeUserModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
           </div>
           <div class="p-5 space-y-4">
               <input type="hidden" id="edit-user-id">
-              <div>
-                  <label class="block text-xs font-bold text-slate-500 mb-1">Nombre Completo</label>
-                  <input type="text" id="input-name" class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
-              </div>
-              <div>
-                  <label class="block text-xs font-bold text-slate-500 mb-1">Sucursal</label>
-                  <input type="text" id="input-branch" class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
-              </div>
-              <div class="flex items-center gap-2 pt-2">
-                  <input type="checkbox" id="input-active" class="rounded text-indigo-600 focus:ring-indigo-500" checked>
-                  <label class="text-sm text-slate-700">Usuario Activo</label>
-              </div>
-              <button onclick="saveUser()" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-bold shadow hover:bg-indigo-700 transition">
-                  Guardar Cambios
-              </button>
-              <button id="btn-delete-user" onclick="deleteUser()" class="w-full text-red-500 py-2 text-xs font-bold hover:bg-red-50 hidden">
-                  Eliminar Promotor Definitivamente
-              </button>
+              <div><label class="block text-xs font-bold text-slate-500 mb-1">Nombre</label><input type="text" id="input-name" class="w-full rounded-lg border-slate-300"></div>
+              <div><label class="block text-xs font-bold text-slate-500 mb-1">Sucursal</label><input type="text" id="input-branch" class="w-full rounded-lg border-slate-300"></div>
+              <div class="flex items-center gap-2 pt-2"><input type="checkbox" id="input-active" class="rounded text-indigo-600" checked><label class="text-sm text-slate-700">Activo</label></div>
+              <button onclick="saveUser()" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-bold">Guardar</button>
+              <button id="btn-delete-user" onclick="deleteUser()" class="w-full text-red-500 py-2 text-xs font-bold hidden">Eliminar</button>
           </div>
       </div>
   </div>
+  <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[70] text-sm font-medium translate-y-10"><span id="toast-msg">Mensaje</span></div>
 
-  <!-- TOAST -->
-  <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[70] flex items-center gap-2 text-sm font-medium translate-y-10">
-    <i data-lucide="info" class="w-4 h-4"></i> <span id="toast-msg">Mensaje</span>
-  </div>
-
-  <script>
-    /* =========================================
-       CORE CONFIG & INIT
-       ========================================= */
-    <!-- Lucide icons local UMD -->
-  <script defer src="./assets/js/lucide.min.js"></script>
-
-<script>
-  window.onload = async () => {
-    lucide.createIcons(); // ← AQUÍ ES DONDE SÍ FUNCIONA
-
-    document.getElementById('evidence-date').valueAsDate = new Date();
-    document.getElementById('evidence-date').addEventListener('change', loadUserDailyEvidence);
-
-    await initDB();
-    await loadTeamGrid();
-    loadGistConfig();
-};
-    /* =========================================
-       UI HELPERS (TABS & MODALS)
-       ========================================= */
-    function showTab(tab) {
-        // Hide all views
-        ['team', 'individual', 'settings'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
-        // Deactivate navs
-        ['team', 'individual', 'settings'].forEach(n => document.getElementById(`nav-${n}`).classList.remove('active', 'bg-blue-50', 'text-blue-600'));
-        
-        // Show selected
-        document.getElementById(`view-${tab}`).classList.remove('hidden');
-        const navBtn = document.getElementById(`nav-${tab}`);
-        navBtn.classList.add('active');
-
-        // Logic specific
-        if(tab === 'team') {
-            document.getElementById('nav-individual').classList.add('hidden');
-            loadTeamGrid();
-            currentUser = null; // Deselect user when going back to grid
-        }
-        if(tab === 'settings') loadGistConfig();
-    }
-
-    function switchIndTab(subtab) {
-        document.getElementById('ind-view-evidencia').classList.add('hidden');
-        document.getElementById('ind-view-historial').classList.add('hidden');
-        document.getElementById('subtab-evidencia').className = "flex-1 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent";
-        document.getElementById('subtab-historial').className = "flex-1 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent";
-
-        document.getElementById(`ind-view-${subtab}`).classList.remove('hidden');
-        document.getElementById(`subtab-${subtab}`).className = "flex-1 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50";
-        
-        if(subtab === 'historial') renderUserChart();
-    }
-
-    function showToast(msg, type='info') {
-        const t = document.getElementById('toast');
-        document.getElementById('toast-msg').innerText = msg;
-        t.classList.remove('opacity-0', 'translate-y-10');
-        setTimeout(() => t.classList.add('opacity-0', 'translate-y-10'), 3000);
-    }
-
-    function openUserModal(userId = null) {
-        const modal = document.getElementById('user-modal');
-        const content = document.getElementById('user-modal-content');
-        const title = document.getElementById('modal-title');
-        const btnDel = document.getElementById('btn-delete-user');
-        
-        // Reset form
-        document.getElementById('input-name').value = '';
-        document.getElementById('input-branch').value = '';
-        document.getElementById('input-active').checked = true;
-        document.getElementById('edit-user-id').value = '';
-
-        if (userId) {
-            title.innerText = "Editar Promotor";
-            btnDel.classList.remove('hidden');
-            // Load data
-            dbGet(STORES.USERS, userId).then(u => {
-                if(u) {
-                    document.getElementById('input-name').value = u.name;
-                    document.getElementById('input-branch').value = u.branch;
-                    document.getElementById('input-active').checked = u.active;
-                    document.getElementById('edit-user-id').value = u.id;
-                }
-            });
-        } else {
-            title.innerText = "Nuevo Promotor";
-            btnDel.classList.add('hidden');
-        }
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        setTimeout(() => {
-            content.classList.remove('scale-95', 'opacity-0');
-            content.classList.add('scale-100', 'opacity-100');
-        }, 10);
-    }
-
-    function closeUserModal() {
-        const modal = document.getElementById('user-modal');
-        const content = document.getElementById('user-modal-content');
-        content.classList.remove('scale-100', 'opacity-100');
-        content.classList.add('scale-95', 'opacity-0');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }, 200);
-    }
-
-    /* =========================================
-       DATABASE ENGINE
-       ========================================= */
-    function initDB() {
-        return new Promise((resolve, reject) => {
-            const req = indexedDB.open(DB_NAME, 2); // Version 2 for schema update
-            req.onupgradeneeded = e => {
-                db = e.target.result;
-                if (!db.objectStoreNames.contains(STORES.USERS)) db.createObjectStore(STORES.USERS, { keyPath: 'id' });
-                if (!db.objectStoreNames.contains(STORES.EVIDENCES)) {
-                    const es = db.createObjectStore(STORES.EVIDENCES, { keyPath: 'id' });
-                    es.createIndex('userId', 'userId', { unique: false });
-                }
-                if (!db.objectStoreNames.contains(STORES.CONFIG)) db.createObjectStore(STORES.CONFIG, { keyPath: 'key' });
-            };
-            req.onsuccess = e => {
-                db = e.target.result;
-                document.getElementById('db-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-green-400"></span> Conectado';
-                document.getElementById('db-status').classList.replace('text-yellow-300', 'text-green-300');
-                resolve(db);
-            };
-            req.onerror = e => reject(e);
-        });
-    }
-
-    function dbPut(store, data) {
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(store, 'readwrite');
-            tx.objectStore(store).put(data).onsuccess = () => resolve();
-            tx.onerror = e => reject(e);
-        });
-    }
-    
-    function dbGet(store, key) {
-        return new Promise(resolve => {
-            const tx = db.transaction(store, 'readonly');
-            tx.objectStore(store).get(key).onsuccess = e => resolve(e.target.result);
-        });
-    }
-
-    function dbGetAll(store) {
-        return new Promise(resolve => {
-            const tx = db.transaction(store, 'readonly');
-            tx.objectStore(store).getAll().onsuccess = e => resolve(e.target.result || []);
-        });
-    }
-
-    function dbDelete(store, key) {
-        return new Promise((resolve) => {
-            const tx = db.transaction(store, 'readwrite');
-            tx.objectStore(store).delete(key).onsuccess = () => resolve();
-        });
-    }
-
-    /* =========================================
-       TEAM LOGIC (CRUD)
-       ========================================= */
-    async function saveUser() {
-        const id = document.getElementById('edit-user-id').value || crypto.randomUUID();
-        const name = document.getElementById('input-name').value.trim();
-        const branch = document.getElementById('input-branch').value.trim();
-        const active = document.getElementById('input-active').checked;
-
-        if(!name) return showToast('Nombre es requerido');
-
-        const user = { id, name, branch, active, updated: Date.now() };
-        await dbPut(STORES.USERS, user);
-        closeUserModal();
-        showToast('Promotor guardado');
-        loadTeamGrid();
-    }
-
-    async function deleteUser() {
-        const id = document.getElementById('edit-user-id').value;
-        if(!id) return;
-        if(confirm('¿Eliminar este usuario y todo su historial?')) {
-            // Delete user
-            await dbDelete(STORES.USERS, id);
-            // Optional: Delete evidences associated (For demo we skip deep clean or iterate)
-            closeUserModal();
-            showToast('Promotor eliminado');
-            loadTeamGrid();
-        }
-    }
-
-    async function loadTeamGrid() {
-        const grid = document.getElementById('team-grid');
-        grid.innerHTML = '';
-        const users = await dbGetAll(STORES.USERS);
-        
-        if(users.length === 0) {
-            grid.innerHTML = `<div class="col-span-full text-center p-10 bg-white rounded-xl border border-dashed border-slate-300 text-slate-500">
-                <i data-lucide="users" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
-                No hay promotores. Agrega uno nuevo.
-            </div>`;
-            return;
-        }
-
-        // Check status for today for each user
-        const todayStr = new Date().toISOString().split('T')[0];
-        const allEvidences = await dbGetAll(STORES.EVIDENCES);
-
-        users.forEach(u => {
-            // Status logic
-            const todayRec = allEvidences.find(e => e.userId === u.id && e.fecha === todayStr);
-            let statusBadge = '<span class="bg-slate-100 text-slate-500 text-[10px] px-2 py-1 rounded-full">Sin registro</span>';
-            
-            if (todayRec) {
-                if(todayRec.entrada && todayRec.salida) statusBadge = '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded-full font-bold">Completado</span>';
-                else if (todayRec.entrada) statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-1 rounded-full font-bold">Entrada OK</span>';
-            }
-
-            const initials = u.name.substring(0,2).toUpperCase();
-            
-            const card = document.createElement('div');
-            card.className = "bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition relative group";
-            card.innerHTML = `
-                <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition">
-                    <button onclick="event.stopPropagation(); openUserModal('${u.id}')" class="text-slate-400 hover:text-blue-600 p-1 bg-slate-50 rounded"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                </div>
-                <div class="flex items-center gap-3 cursor-pointer" onclick="selectUser('${u.id}')">
-                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-600 font-bold text-sm border-2 border-white shadow-sm">
-                        ${initials}
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 leading-tight">${u.name}</h3>
-                        <p class="text-xs text-slate-500 flex items-center gap-1 mb-1">
-                            <i data-lucide="map-pin" class="w-3 h-3"></i> ${u.branch}
-                        </p>
-                        ${u.active ? statusBadge : '<span class="bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded-full">Inactivo</span>'}
-                    </div>
-                </div>
-            `;
-            grid.appendChild(card);
-        });
-        lucide.createIcons();
-    }
-
-    async function selectUser(id) {
-        const user = await dbGet(STORES.USERS, id);
-        if(!user) return;
-        
-        currentUser = user;
-        
-        // Update UI Details
-        document.getElementById('ind-name').innerText = user.name;
-        document.getElementById('ind-branch').innerText = user.branch;
-        document.getElementById('ind-initials').innerText = user.name.substring(0,2).toUpperCase();
-        
-        // Show Tab
-        document.getElementById('nav-individual').classList.remove('hidden');
-        showTab('individual');
-        
-        // Load Data
-        loadUserStats();
-        loadUserDailyEvidence();
-    }
-
-    /* =========================================
-       INDIVIDUAL EVIDENCE LOGIC
-       ========================================= */
-    async function loadUserDailyEvidence() {
-        if(!currentUser) return;
-        const dateStr = document.getElementById('evidence-date').value;
-        const key = `${currentUser.id}_${dateStr}`;
-        
-        const record = await dbGet(STORES.EVIDENCES, key);
-        
-        currentEvidences = { entrada: null, salida: null };
-        
-        if(record) {
-            currentEvidences.entrada = record.entrada;
-            currentEvidences.salida = record.salida;
-        }
-
-        updatePreviews();
-    }
-
-    function handleFileSelect(event, type) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            // Resize logic for optimization
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const maxDim = 400; 
-                let w = img.width, h = img.height;
-                if (w > h) { if (w > maxDim) { h *= maxDim/w; w = maxDim; } }
-                else { if (h > maxDim) { w *= maxDim/h; h = maxDim; } }
-                
-                canvas.width = w; canvas.height = h;
-                ctx.drawImage(img, 0, 0, w, h);
-                
-                currentEvidences[type] = canvas.toDataURL('image/jpeg', 0.7);
-                updatePreviews();
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function updatePreviews() {
-        ['entrada', 'salida'].forEach(type => {
-            const div = document.getElementById(`preview-${type}`);
-            const src = currentEvidences[type];
-            if(src) div.innerHTML = `<img src="${src}" class="w-full h-full object-cover">`;
-            else div.innerHTML = `<span class="text-slate-400 text-[10px]">Vacío</span>`;
-        });
-    }
-
-    async function saveEvidence() {
-        if(!currentUser) return;
-        const dateStr = document.getElementById('evidence-date').value;
-        
-        if(!currentEvidences.entrada && !currentEvidences.salida) return showToast('Sube alguna foto');
-
-        const record = {
-            id: `${currentUser.id}_${dateStr}`,
-            userId: currentUser.id,
-            fecha: dateStr,
-            entrada: currentEvidences.entrada,
-            salida: currentEvidences.salida,
-            timestamp: Date.now()
-        };
-
-        await dbPut(STORES.EVIDENCES, record);
-        showToast('Evidencia Guardada');
-        loadUserStats(); // Refresh stats
-    }
-
-    /* =========================================
-       STATS & CHARTS
-       ========================================= */
-    async function loadUserStats() {
-        if(!currentUser) return;
-        
-        const all = await dbGetAll(STORES.EVIDENCES);
-        const userEvs = all.filter(e => e.userId === currentUser.id);
-        
-        // Logic: Weekly progress (Current week)
-        // Simplified logic: Last 7 days relative to today
-        // Ideally, we check Monday-Sunday
-        const today = new Date();
-        const dayOfWeek = today.getDay() || 7; // 1 Mon - 7 Sun
-        const monday = new Date(today);
-        monday.setHours(0,0,0,0);
-        monday.setDate(today.getDate() - dayOfWeek + 1);
-
-        let weeklyCount = 0;
-        userEvs.forEach(e => {
-            const d = new Date(e.fecha);
-            // Very simple check: is date >= monday?
-            // Note: string comparison works for ISO yyyy-mm-dd if timezone matches, 
-            // but creating Date object is safer
-            const dObj = new Date(e.fecha + 'T12:00:00'); // noon to avoid TZ shifts
-            if (dObj >= monday && e.entrada && e.salida) weeklyCount++;
-        });
-
-        const percent = Math.min(100, Math.round((weeklyCount / 6) * 100));
-        document.getElementById('ind-weekly-count').innerText = weeklyCount;
-        document.getElementById('ind-weekly-percent').innerText = percent + '%';
-
-        // Populate History List
-        const list = document.getElementById('user-history-list');
-        list.innerHTML = '';
-        // Sort desc
-        userEvs.sort((a,b) => b.fecha.localeCompare(a.fecha));
-        
-        userEvs.slice(0, 10).forEach(ev => {
-            const isFull = ev.entrada && ev.salida;
-            const div = document.createElement('div');
-            div.className = "p-3 flex justify-between items-center text-sm";
-            div.innerHTML = `
-                <div class="flex gap-3 items-center">
-                    <span class="font-mono text-xs text-slate-500">${ev.fecha}</span>
-                    <div class="flex gap-1">
-                         ${ev.entrada ? '<div class="w-2 h-2 rounded-full bg-blue-500" title="Entrada"></div>' : ''}
-                         ${ev.salida ? '<div class="w-2 h-2 rounded-full bg-indigo-500" title="Salida"></div>' : ''}
-                    </div>
-                </div>
-                <span class="${isFull ? 'text-green-600 font-bold' : 'text-orange-500'} text-xs">
-                    ${isFull ? 'Completo' : 'Parcial'}
-                </span>
-            `;
-            list.appendChild(div);
-        });
-
-        // Trigger chart update if visible
-        if(!document.getElementById('ind-view-historial').classList.contains('hidden')) {
-            renderUserChart();
-        }
-    }
-
-    function renderUserChart() {
-        const ctx = document.getElementById('userChart').getContext('2d');
-        if(userChartInstance) userChartInstance.destroy();
-        
-        // Mock Data for visualization
-        // In real app, calculate real weekly historical data
-        userChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Actual'],
-                datasets: [{
-                    label: 'Días Completos',
-                    data: [4, 5, 6, parseInt(document.getElementById('ind-weekly-count').innerText)],
-                    backgroundColor: '#4f46e5',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true, max: 6, ticks: { stepSize: 1 } } },
-                plugins: { legend: { display: false } }
-            }
-        });
-    }
-
-    /* =========================================
-       SYNC GIST (Full Dump)
-       ========================================= */
-    async function loadGistConfig() {
-        const cfg = await dbGet(STORES.CONFIG, 'gist_credentials');
-        if(cfg) {
-            document.getElementById('gist-id').value = cfg.id || '';
-            document.getElementById('gist-token').value = cfg.token || '';
-        }
-    }
-
-    async function saveGistConfig() {
-        const id = document.getElementById('gist-id').value.trim();
-        const token = document.getElementById('gist-token').value.trim();
-        await dbPut(STORES.CONFIG, { key: 'gist_credentials', id, token });
-        showToast('Credenciales Gist guardadas');
-    }
-
-    async function syncToGist() {
-        const cfg = await dbGet(STORES.CONFIG, 'gist_credentials');
-        if(!cfg || !cfg.id || !cfg.token) return showToast('Configura Gist primero', 'error');
-
-        showToast('Preparando datos...');
-        const users = await dbGetAll(STORES.USERS);
-        const evidences = await dbGetAll(STORES.EVIDENCES);
-
-        const payload = {
-            description: "Backup Asistencias - Gestion Promotores",
-            files: {
-                "gestion_asistencias_full.json": {
-                    content: JSON.stringify({ users, evidences, timestamp: Date.now() })
-                }
-            }
-        };
-
-        try {
-            const res = await fetch(`https://api.github.com/gists/${cfg.id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `token ${cfg.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-            if(res.ok) showToast('Sincronización Exitosa');
-            else showToast('Error en Gist API', 'error');
-        } catch(e) {
-            console.error(e);
-            showToast('Error de conexión', 'error');
-        }
-    }
-
-    async function syncFromGist() {
-        const cfg = await dbGet(STORES.CONFIG, 'gist_credentials');
-        if(!cfg || !cfg.id || !cfg.token) return showToast('Configura Gist primero', 'error');
-
-        showToast('Descargando...');
-        try {
-            const res = await fetch(`https://api.github.com/gists/${cfg.id}`, {
-                headers: { 'Authorization': `token ${cfg.token}` }
-            });
-            const data = await res.json();
-            const content = data.files['gestion_asistencias_full.json']?.content;
-            
-            if(content) {
-                const parsed = JSON.parse(content);
-                
-                // Restore Users
-                if(parsed.users) {
-                    for(const u of parsed.users) await dbPut(STORES.USERS, u);
-                }
-                // Restore Evidences
-                if(parsed.evidences) {
-                    for(const e of parsed.evidences) await dbPut(STORES.EVIDENCES, e);
-                }
-                
-                showToast('Base de datos actualizada');
-                loadTeamGrid();
-            } else {
-                showToast('Archivo no encontrado en Gist', 'error');
-            }
-        } catch(e) {
-             console.error(e);
-            showToast('Error al descargar', 'error');
-        }
-    }
-
-  </script>
+  <!-- IMPORTANTE: app.js va al final -->
+  <script src="./assets/js/app.js"></script>
 </body>
 </html>
 
