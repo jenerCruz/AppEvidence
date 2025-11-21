@@ -8,15 +8,11 @@
   <!-- Tailwind CSS -->
     <link rel="stylesheet" href="./assets/css/tailwind.min.css">
   
-  <!-- Chart.js -->link rel="manifest" href="./manifest.json">
-  
   <script src="./assets/js/chart.umd.min.js"></script>
    <script defer src="./assets/js/lucide.min.js"></script>
   
 
   <!-- Lucide Icons -->
-  
-
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; }
     .tab-btn { transition: all 0.2s; }
@@ -259,25 +255,18 @@
        ========================================= */
     <!-- Lucide icons local UMD -->
   <script defer src="./assets/js/lucide.min.js"></script>
-  
-    lucide.createIcons();
-    const DB_NAME = 'GestionAsistenciasDB';
-    const STORES = { USERS: 'users', EVIDENCES: 'evidences', CONFIG: 'config' };
-    let db;
-    
-    // Estado Global
-    let currentUser = null;
-    let currentEvidences = { entrada: null, salida: null };
-    let userChartInstance = null;
 
-    window.onload = async () => {
-        document.getElementById('evidence-date').valueAsDate = new Date();
-        document.getElementById('evidence-date').addEventListener('change', loadUserDailyEvidence);
-        await initDB();
-        await loadTeamGrid();
-        loadGistConfig();
-    };
+<script>
+  window.onload = async () => {
+    lucide.createIcons(); // ← AQUÍ ES DONDE SÍ FUNCIONA
 
+    document.getElementById('evidence-date').valueAsDate = new Date();
+    document.getElementById('evidence-date').addEventListener('change', loadUserDailyEvidence);
+
+    await initDB();
+    await loadTeamGrid();
+    loadGistConfig();
+};
     /* =========================================
        UI HELPERS (TABS & MODALS)
        ========================================= */
