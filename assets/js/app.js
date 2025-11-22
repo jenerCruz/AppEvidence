@@ -1,4 +1,3 @@
- 
 /* ============================================================
    GLOBAL CONFIGURACION IDB
    ============================================================ */
@@ -28,7 +27,9 @@ function parseOCRDate(ocrDateString) {
 
     // Convertimos año de 2 dígitos (YY) a 4 dígitos (YYYY). Asumimos 20XX.
     const year = parseInt(parts[2], 10);
-    const fullYear = (year > new Date().getFullYear() - 2000 + 10) ? 1900 + year : 2000 + year;
+    // Asume 20xx si el año de 2 dígitos no es "demasiado" grande (e.g., más de 10 años en el futuro)
+    const currentYearShort = new Date().getFullYear() - 2000;
+    const fullYear = (year > currentYearShort + 10) ? 1900 + year : 2000 + year;
 
     const month = parts[1].padStart(2, '0');
     const day = parts[0].padStart(2, '0');
@@ -92,6 +93,7 @@ function validateCheckOutData(text, userSelectedDate) {
 async function processImageForOCR(imageFile) {
     showToast('Iniciando OCR... proceso local y asíncrono.');
     
+    // Asume que Tesseract está disponible globalmente
     const worker = await Tesseract.createWorker({
         logger: m => {
              // Opcional: mostrar progreso detallado
@@ -118,13 +120,12 @@ async function processImageForOCR(imageFile) {
 
 /* ============================================================
    UTILIDADES
-  
-/* ============================================================
-   UTILIDADES
    ============================================================ */
 function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
     const toastMsg = document.getElementById('toast-msg');
+
+    if (!toast || !toastMsg) return console.warn('Toast elements not found.'); // Manejo básico si no existe el DOM
 
     toastMsg.textContent = msg;
     toast.className = 'fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[70] text-sm font-medium translate-y-10';
@@ -209,14 +210,19 @@ function openUserPanel(userId, userName, userBranch) {
 }
 
 function switchIndTab(subTabName) {
+    // Resetear las vistas y los estilos de las sub-pestañas
     document.getElementById('ind-view-evidencia').classList.add('hidden');
     document.getElementById('ind-view-historial').classList.add('hidden');
     document.getElementById('subtab-evidencia').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50', 'text-slate-500', 'hover:text-slate-700');
     document.getElementById('subtab-historial').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50', 'text-slate-500', 'hover:text-slate-700');
 
+    // Activar la sub-pestaña seleccionada
     document.getElementById(`ind-view-${subTabName}`).classList.remove('hidden');
     document.getElementById(`subtab-${subTabName}`).classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-blue-50');
-    document.getElementById(`subtab-${subTabName === 'evidencia' ? 'historial' : 'evidencia'}`).classList.add('text-slate-500', 'hover:text-slate-700');
+    
+    // Asegurar que la otra sub-pestaña tiene el estilo inactivo
+    const otherSubTabName = subTabName === 'evidencia' ? 'historial' : 'evidencia';
+    document.getElementById(`subtab-${otherSubTabName}`).classList.add('text-slate-500', 'hover:text-slate-700');
 
     if (subTabName === 'historial') {
         renderUserChart(activeUserId);
@@ -238,7 +244,7 @@ function openDB() {
                 db.createObjectStore(STORES.USERS, { keyPath: 'id' });
             }
             if (!db.objectStoreNames.contains(STORES.EVIDENCES)) {
-                // KeyPath compuesto para eficiencia en las búsquedas
+                // Se agregó keyPath, pero la búsqueda por evidencia debería ser por ID compuesto
                 db.createObjectStore(STORES.EVIDENCES, { keyPath: 'id' });
             }
             if (!db.objectStoreNames.contains(STORES.CONFIG)) {
@@ -393,6 +399,9 @@ function renderUserCard(user) {
     const activeClass = user.active ? 'bg-white border-slate-200' : 'bg-slate-100 border-slate-300 opacity-60';
     const activeText = user.active ? 'Activo' : 'Inactivo';
 
+    // Usamos JSON.stringify y replace para escapar el objeto JSON correctamente
+    const userJsonString = JSON.stringify(user).replace(/"/g, '&quot;');
+
     return `
         <div class="user-card ${activeClass} rounded-xl shadow-md p-4 flex items-center gap-4 cursor-pointer hover:shadow-lg transition duration-200" 
              onclick="openUserPanel('${user.id}', '${user.name.replace(/'/g, "\\'")}', '${user.branch.replace(/'/g, "\\'")}')">
@@ -405,7 +414,7 @@ function renderUserCard(user) {
             </div>
             <div class="text-right flex-shrink-0">
                 <span class="text-[10px] font-bold ${user.active ? 'text-green-600' : 'text-red-500'}">${activeText}</span>
-                <button onclick="event.stopPropagation(); openUserModal(${JSON.stringify(user).replace(/"/g, '&quot;')})" class="text-slate-400 hover:text-slate-600 p-1 block mt-0.5" aria-label="Editar usuario">
+                <button onclick="event.stopPropagation(); openUserModal(${userJsonString})" class="text-slate-400 hover:text-slate-600 p-1 block mt-0.5" aria-label="Editar usuario">
                     <i data-lucide="pencil" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -427,6 +436,7 @@ async function renderTeamGrid(users) {
     const html = [...activeUsers, ...inactiveUsers].map(user => renderUserCard(user)).join('');
     grid.innerHTML = html;
     
+    // Asegurarse de que los iconos de Lucide se rendericen
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
@@ -479,10 +489,9 @@ function fileToBase64(file) {
 let currentEvidence = {
     entrada: null,
     salida: null,
-// NUEVOS CAMPOS:Almacenan los datos
- validador del OCR
-  validatedCheckIn:null,
-  validatedCheckOut:null
+    // NUEVOS CAMPOS: Almacenan los datos validados del OCR
+    validatedCheckIn: null,
+    validatedCheckOut: null
 };
 
 async function handleFileSelect(event, type) {
@@ -504,6 +513,7 @@ async function handleFileSelect(event, type) {
         }
 
         // --- PASO 2: Validar el texto con la fecha seleccionada ---
+        // Nota: Se usa validateCheckOutData, asumiendo que la lógica es la misma para entrada y salida.
         const validationResult = validateCheckOutData(rawText, selectedDate);
 
         if (!validationResult.isValid) {
@@ -543,14 +553,24 @@ async function loadCurrentEvidence(userId, date) {
     const evidence = await getByID(STORES.EVIDENCES, evidenceId);
 
     // Reiniciar el estado
-    currentEvidence = { entrada: null, salida: null };
+    currentEvidence = { 
+        entrada: null, 
+        salida: null,
+        validatedCheckIn: null, // Asegurar que estos también se reinicien
+        validatedCheckOut: null
+    };
     document.getElementById('preview-entrada').innerHTML = '<span class="text-slate-400 text-[10px]">Vacío</span>';
     document.getElementById('preview-salida').innerHTML = '<span class="text-slate-400 text-[10px]">Vacío</span>';
 
     if (evidence) {
+        // Cargar Base64
         currentEvidence.entrada = evidence.entrada;
         currentEvidence.salida = evidence.salida;
         
+        // Cargar datos validados si existen (para reintentar guardar si es necesario)
+        currentEvidence.validatedCheckIn = evidence.validatedEntry || null;
+        currentEvidence.validatedCheckOut = evidence.validatedExit || null;
+
         if (evidence.entrada) {
             document.getElementById('preview-entrada').innerHTML = `<img src="${evidence.entrada}" class="w-full h-full object-cover">`;
         }
@@ -559,6 +579,7 @@ async function loadCurrentEvidence(userId, date) {
         }
     }
 }
+
 async function saveEvidence() {
     const date = document.getElementById('evidence-date').value;
     
@@ -587,9 +608,9 @@ async function saveEvidence() {
         entrada: currentEvidence.entrada,
         salida: currentEvidence.salida,
         // -----------------------------------------------------------------
-        // NUEVOS CAMPOS CLAVE: Guardamos el resultado del OCR y la validación
-        validatedEntry: currentEvidence.validatedCheckIn,
-        validatedExit: currentEvidence.validatedCheckOut,
+        // CAMPOS CLAVE: Guardamos el resultado del OCR y la validación
+        validatedEntry: currentEvidence.validatedCheckIn, // Corregido: Usar validatedCheckIn
+        validatedExit: currentEvidence.validatedCheckOut, // Corregido: Usar validatedCheckOut
         // -----------------------------------------------------------------
         timestamp: Date.now()
     };
@@ -607,36 +628,7 @@ async function saveEvidence() {
         showToast('Error al guardar la evidencia.', true);
         console.error(e);
     }
-}
-
-// ...
- 
-    
-    const evidenceId = `${activeUserId}_${date}`;
-    
-    const evidence = {
-        id: evidenceId,
-        userId: activeUserId,
-        fecha: date,
-        entrada: currentEvidence.entrada,
-        salida: currentEvidence.salida,
-        timestamp: Date.now()
-    };
-
-    try {
-        await save(STORES.EVIDENCES, evidence);
-        showToast('Asistencia guardada correctamente.');
-        // Recalcular stats y actualizar el historial
-        calculateUserStats(activeUserId);
-        if (!document.getElementById('ind-view-historial').classList.contains('hidden')) {
-             renderUserChart(activeUserId);
-             renderUserHistory(activeUserId);
-        }
-    } catch (e) {
-        showToast('Error al guardar la evidencia.', true);
-        console.error(e);
-    }
-}
+} // <--- Eliminada la repetición de la función saveEvidence() que estaba aquí.
 
 document.getElementById('evidence-date').addEventListener('change', (e) => {
     if (activeUserId) {
@@ -665,7 +657,8 @@ async function calculateUserStats(userId) {
 
     userEvidences.forEach(e => {
         const evidenceDate = new Date(e.fecha);
-        if (evidenceDate >= startOfWeek && evidenceDate <= now) {
+        // Verificar si la evidencia cae dentro de esta semana
+        if (evidenceDate >= startOfWeek && evidenceDate.getTime() <= now.getTime()) {
             // Verificar si tiene entrada Y salida
             if (e.entrada && e.salida) {
                 // Solo contar los días de Lunes (1) a Sábado (6)
@@ -710,6 +703,7 @@ async function renderUserChart(userId) {
 
     const ctx = document.getElementById('userChart').getContext('2d');
     
+    // Asume que Chart.js está disponible globalmente
     if (userChartInstance) {
         userChartInstance.destroy();
     }
@@ -783,6 +777,7 @@ function renderUserHistory(userId) {
                 `;
             }).join('');
             
+            // Asegurarse de que los iconos de Lucide se rendericen
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
@@ -802,13 +797,20 @@ function renderUserHistory(userId) {
 const GIST_FILE_NAME = 'gestion_asistencias_full.json';
 
 async function getGistConfig() {
-    const gistId = await getByID(STORES.CONFIG, 'gistId');
-    const gistToken = await getByID(STORES.CONFIG, 'gistToken');
+    const gistIdObj = await getByID(STORES.CONFIG, 'gistId');
+    const gistTokenObj = await getByID(STORES.CONFIG, 'gistToken');
     
-    document.getElementById('gist-id').value = gistId ? gistId.value : '';
-    document.getElementById('gist-token').value = gistToken ? gistToken.value : '';
+    const gistId = gistIdObj ? gistIdObj.value : '';
+    const gistToken = gistTokenObj ? gistTokenObj.value : '';
 
-    return { id: gistId ? gistId.value : null, token: gistToken ? gistToken.value : null };
+    // Asegurarse de que los elementos existen antes de asignar
+    const idEl = document.getElementById('gist-id');
+    const tokenEl = document.getElementById('gist-token');
+
+    if (idEl) idEl.value = gistId;
+    if (tokenEl) tokenEl.value = gistToken;
+
+    return { id: gistId, token: gistToken };
 }
 
 async function saveGistConfig() {
@@ -833,8 +835,8 @@ async function saveGistConfig() {
  */
 async function syncFromGist() {
     const config = await getGistConfig();
-    if (!config.id) {
-        return showToast('Configuración de Gist incompleta.', true);
+    if (!config.id || !config.token) { // Ambas son necesarias para la auth
+        return showToast('Configuración de Gist incompleta (Token y ID).', true);
     }
 
     showToast('Descargando datos desde Gist...');
@@ -843,6 +845,7 @@ async function syncFromGist() {
         // La URL de un Gist es: https://api.github.com/gists/ID_DEL_GIST
         const response = await fetch(`https://api.github.com/gists/${config.id}`, {
             headers: {
+                // Se requiere token para acceder a Gists privados o por seguridad
                 'Authorization': `token ${config.token}`
             }
         });
@@ -955,8 +958,7 @@ async function cleanOldEvidence() {
         let deletedCount = 0;
         
         for (const evidence of allEvidences) {
-            // Asumimos que la evidencia usa la fecha de registro o la fecha en su ID.
-            // Si la fecha de registro (e.fecha) es más antigua que el punto de corte, la borramos.
+            // Se usa la fecha de la evidencia (e.fecha), que está en YYYY-MM-DD
             const evidenceDate = new Date(evidence.fecha).getTime();
 
             if (evidenceDate < cutoffTime) {
@@ -969,6 +971,10 @@ async function cleanOldEvidence() {
             showToast(`${deletedCount} registros antiguos borrados localmente.`);
             // Sincronizar la versión limpia con Gist inmediatamente
             await syncToGist();
+            // Recargar la vista si el usuario activo está en historial
+            if (activeUserId && !document.getElementById('ind-view-historial').classList.contains('hidden')) {
+                renderUserHistory(activeUserId);
+            }
             showToast(`Limpieza completada y sincronizada con Gist. Archivos borrados: ${deletedCount}.`);
         } else {
             showToast('No se encontraron registros de más de 30 días para borrar.');
@@ -981,7 +987,15 @@ async function cleanOldEvidence() {
     }
 }
 
-/* ============================================================\n   REPLACE ALL – necesario para syncFromGist\n   ============================================================ */
+/* ============================================================
+   REPLACE ALL – necesario para syncFromGist
+   ============================================================ */
+/**
+ * Borra todos los datos de un Object Store y añade un nuevo conjunto de datos.
+ * @param {string} storeName - Nombre del Object Store.
+ * @param {Array<Object>} dataArray - Array de objetos a insertar.
+ * @returns {Promise<void>}
+ */
 function replaceAll(storeName, dataArray) {
     return new Promise((resolve, reject) => {
         const tx = db.transaction([storeName], 'readwrite');
@@ -990,8 +1004,12 @@ function replaceAll(storeName, dataArray) {
         const clearReq = store.clear();
         clearReq.onsuccess = () => {
             let i = 0;
+            // Función auto-invocada para añadir elementos uno por uno
             (function addNext() {
-                if (i >= dataArray.length) { resolve(); return; }
+                if (i >= dataArray.length) { 
+                    resolve(); 
+                    return; 
+                }
                 const item = dataArray[i++];
                 const addReq = store.add(item);
                 addReq.onsuccess = addNext;
