@@ -1,7 +1,6 @@
-const CACHE_NAME = 'asistenciaspro-cache-v3'; // Versión 3 (mantener)
+const CACHE_NAME = 'asistenciaspro-cache-v3';
 const CDN_CACHE_NAME = 'cdn-cache-v1';
 
-// Recursos locales a precachear (mantenemos la lista)
 const ASSETS_TO_PRECACHE = [
   './', 
   './index.html',
@@ -10,7 +9,6 @@ const ASSETS_TO_PRECACHE = [
   './assets/icons/icon-192x192.png' 
 ];
 
-// Evento de Instalación: Pre-cache de archivos locales (sin cambios)
 self.addEventListener('install', (e) => {
   console.log('[SW] Instalando y precacheando recursos locales...');
   e.waitUntil(
@@ -24,7 +22,6 @@ self.addEventListener('install', (e) => {
   );
 });
 
-// Evento de Activación: Limpia cachés antiguas (sin cambios)
 self.addEventListener('activate', (e) => {
   console.log('[SW] Activado. Limpiando cachés antiguas...');
   e.waitUntil(
@@ -40,37 +37,43 @@ self.addEventListener('activate', (e) => {
   return self.clients.claim();
 });
 
-// Evento de Fetch: Lógica corregida para evitar el error 'Response body is already used'
+// Evento de Fetch: Lógica CORREGIDA y más robusta
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
+
+  // Excluir la API de GitHub de la caché del Service Worker para no interferir con la sincronización
+  if (url.origin.includes('github.com')) {
+    // Si es la API de GitHub, simplemente la dejamos pasar a la red.
+    return; 
+  }
 
   // 1. Estrategia para CDNs (Cache First)
   if (url.origin === 'https://cdn.jsdelivr.net' || 
       url.origin === 'https://unpkg.com' ||
-      url.origin === 'https://cdn.tailwindcss.com') {
+      url.origin === 'https://cdn.tailwindcss.com' ||
+      url.origin.includes('gstatic.com')) { // Agregamos gstatic por si acaso
     
-    // Excluimos la API de GitHub de la caché del Service Worker para no interferir con la sincronización
-    if (url.origin.includes('github.com')) {
-        return; 
-    }
-
     e.respondWith(
       caches.open(CDN_CACHE_NAME).then((cache) => {
-        return cache.match(e.request).then((response) => {
-          if (response) {
-            return response; // Usar caché si está disponible
+        return cache.match(e.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse; // Cache Hit: Devolver la versión cacheadada
           }
 
-          // Si no está, ir a la red
+          // Cache Miss: Ir a la red
           return fetch(e.request).then((networkResponse) => {
-            // CLONAMOS la respuesta antes de guardarla para poder devolver la original.
-            const responseToCache = networkResponse.clone(); 
+            // CLONAMOS la respuesta original antes de que la usemos para cualquier cosa.
+            const responseClone = networkResponse.clone(); 
             
-            if (networkResponse.status === 200) {
-              cache.put(e.request, responseToCache);
+            // 1. Guardar el CLON en la caché
+            if (networkResponse.ok) { // networkResponse.ok es true para 200-299
+              cache.put(e.request, responseClone);
             }
-            return networkResponse; // Devolvemos la respuesta original al cliente
-          }).catch(() => {
+            // 2. Devolver la respuesta ORIGINAL al cliente
+            return networkResponse; 
+          }).catch((error) => {
+            // Error en la red (o fallo de la respuesta original)
+            console.error('[SW] Error en fetch de CDN:', error);
             return new Response('Error: CDN resource not found in cache and network failed.', {status: 503});
           });
         });
@@ -81,15 +84,13 @@ self.addEventListener('fetch', (e) => {
   
   // 2. Estrategia para recursos locales (Network Falling Back to Cache)
   e.respondWith(
-    // Primero, vamos a la red
     fetch(e.request).then((networkResponse) => {
-      // Si tiene éxito, CLONAMOS, actualizamos el caché, y devolvemos la original.
-      const responseToCache = networkResponse.clone(); 
-      
-      if (networkResponse.ok) { // Usamos .ok para 200-299
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(e.request, responseToCache);
-        }).catch(e => console.error("[SW] Error al guardar en caché local:", e));
+      // Si tiene éxito, CLONAMOS, actualizamos el caché y devolvemos la respuesta original.
+      if (networkResponse.ok && e.request.method === 'GET') {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, responseClone);
+          }).catch(e => console.error("[SW] Error al guardar en caché local:", e));
       }
       return networkResponse; // Devolvemos la respuesta original de la red
 
