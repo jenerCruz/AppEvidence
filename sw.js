@@ -4,7 +4,7 @@ const CDN_CACHE_NAME = 'cdn-cache-v1';
 const ASSETS_TO_PRECACHE = [
   './', 
   './index.html',
-  './assets/js/app.js', 
+  './assets/js/app_ventas.js', 
   './manifest.json',
   './assets/icons/icon-192x192.png' 
 ];
