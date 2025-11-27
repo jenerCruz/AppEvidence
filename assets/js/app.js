@@ -91,27 +91,26 @@ function validateCheckOutData(text, userSelectedDate) {
  * @returns {Promise<string|null>} - El texto extraído o null si hay error.
  */
 async function processImageForOCR(imageFile) {
-    showToast('Iniciando OCR... proceso local y asíncrono.');
-    
-    // Asume que Tesseract está disponible globalmente
+    showToast('Iniciando OCR local...');
+
     const worker = await Tesseract.createWorker({
-        logger: m => {
-             // Opcional: mostrar progreso detallado
-        }
+        workerPath: './assets/js/tesseract/worker.min.js',
+        corePath: './assets/js/tesseract/tesseract-core.wasm',
+        langPath: './assets/js/tesseract/lang/'
     });
 
     try {
+        await worker.load();
         await worker.loadLanguage('spa');
         await worker.initialize('spa');
-        
+
         const { data: { text } } = await worker.recognize(imageFile);
-        
         return text.trim();
 
     } catch (error) {
-        console.error('Error durante el OCR:', error);
-        showToast('Error crítico en el OCR. Intente con una imagen más clara.', true);
-        return null; 
+        console.error('Error durante OCR:', error);
+        showToast('OCR falló. Revisa la imagen.', true);
+        return null;
     } finally {
         await worker.terminate();
     }

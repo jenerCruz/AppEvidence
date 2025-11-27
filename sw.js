@@ -8,6 +8,11 @@ const ASSETS_TO_PRECACHE = [
   './manifest.json',
   './assets/icons/icon-192x192.png' 
 ];
+const worker = await Tesseract.createWorker({
+    workerPath: './assets/js/tesseract/worker.min.js',
+    corePath: './assets/js/tesseract/tesseract-core.wasm',
+    langPath: './assets/js/tesseract/lang/'
+});
 
 self.addEventListener('install', (e) => {
   console.log('[SW] Instalando y precacheando recursos locales...');
@@ -103,5 +108,6 @@ self.addEventListener('fetch', (e) => {
       // Si no hay caché ni red, devuelve un error 
       return new Response('Error: Recurso no encontrado en caché ni en red.', {status: 404});
     })
-  );
+  )
+;
 });
